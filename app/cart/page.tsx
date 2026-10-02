@@ -1,0 +1,22 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { formatInr, type Money } from "../../lib/product-catalog";
+import { calculateCartTotals, type CartItem } from "../../lib/cart-ordering";
+import "./cart.css";
+
+const initialItems: CartItem[] = [
+  { id: "CI-1", productId: "P001", name: "Farm Fresh Milk", storeId: "S001", storeName: "Green Basket", unitPriceMinor: 2790, originalPriceMinor: 3200, quantity: 2, maxQuantity: 8, emoji: "🥛" },
+  { id: "CI-2", productId: "P002", name: "Basmati Rice", storeId: "S002", storeName: "Daily Needs", unitPriceMinor: 61900, originalPriceMinor: 68900, quantity: 1, maxQuantity: 5, emoji: "🍚" },
+  { id: "CI-3", productId: "P003", name: "Cold Coffee", storeId: "S003", storeName: "Corner Mart", unitPriceMinor: 6800, originalPriceMinor: 8500, quantity: 2, maxQuantity: 10, emoji: "☕" },
+];
+const money = (minor: number): Money => ({ currency: "INR", minor });
+
+export default function CartPage() {
+  const [items, setItems] = useState(initialItems);
+  const [placed, setPlaced] = useState(false);
+  const totals = useMemo(() => calculateCartTotals(items, items.length ? 2500 : 0), [items]);
+  const updateQty = (id: string, delta: number) => setItems((current) => current.map((item) => item.id === id ? { ...item, quantity: Math.max(0, Math.min(item.maxQuantity, item.quantity + delta)) } : item).filter((item) => item.quantity > 0));
+  if (placed) return <main className="cartShell"><div className="successCard"><div className="successIcon">✓</div><p className="eyebrow">ORDER CONFIRMED</p><h1>Your InstaBuy order is on its way.</h1><p>Order <b>#IB-261002-1842</b> has been confirmed by our partner network.</p><div className="successStats"><span><small>Total</small><b>{formatInr(money(totals.totalMinor))}</b></span><span><small>Member savings</small><b>{formatInr(money(totals.savingsMinor))}</b></span><span><small>ETA</small><b>18–28 min</b></span></div><a href="/orders" className="primary">Track order →</a><a href="/shop" className="backShop">Continue shopping</a></div></main>;
+  return <main className="cartShell"><header className="cartHeader"><a href="/shop" className="brand">Insta<span>Buy</span></a><a href="/shop" className="back">← Continue shopping</a><a href="/orders" className="ordersLink">Orders</a></header><section className="cartPage"><div className="cartIntro"><p className="eyebrow">YOUR BASKET</p><h1>Ready to <span>checkout?</span></h1><p>Member prices are locked into this checkout preview. Final pricing is revalidated before order creation.</p></div><div className="checkoutGrid"><section className="itemsCard"><div className="cardTitle"><h2>Cart items</h2><span>{items.reduce((n, i) => n + i.quantity, 0)} items</span></div>{items.length === 0 ? <div className="emptyCart"><span>🛍️</span><h3>Your basket is empty</h3><a href="/shop">Browse member deals</a></div> : items.map((item) => <div className="cartItem" key={item.id}><div className="itemIcon">{item.emoji}</div><div className="itemInfo"><small>{item.storeName}</small><h3>{item.name}</h3><p>Member price · {formatInr(money(item.unitPriceMinor))} each</p></div><div className="qty"><button onClick={() => updateQty(item.id, -1)}>−</button><b>{item.quantity}</b><button onClick={() => updateQty(item.id, 1)}>+</button></div><strong className="lineTotal">{formatInr(money(item.unitPriceMinor * item.quantity))}</strong></div>)}<div className="deliveryBox"><span>⚡</span><div><b>Fast local delivery</b><p>Partner stores can deliver this basket in approximately 18–28 minutes.</p></div><strong>{formatInr(money(2500))}</strong></div></section><aside className="summaryCard"><div className="summaryTitle"><span>Order summary</span><b>Member</b></div><div className="summaryRow"><span>Subtotal</span><b>{formatInr(money(totals.subtotalMinor))}</b></div><div className="summaryRow discount"><span>Member savings</span><b>−{formatInr(money(totals.savingsMinor))}</b></div><div className="summaryRow"><span>Delivery fee</span><b>{formatInr(money(totals.deliveryFeeMinor))}</b></div><div className="totalRow"><span>Total payable</span><strong>{formatInr(money(totals.totalMinor))}</strong></div><div className="address"><small>DELIVER TO</small><b>Home · Rajkot</b><p>Hitesh Kansara · Rajkot, Gujarat</p><button>Change</button></div><button className="primary checkout" disabled={!items.length} onClick={() => setPlaced(true)}>Place order · {formatInr(money(totals.totalMinor))}</button><small className="secure">✓ Price verified · Secure checkout</small></aside></div></section></main>;
+}

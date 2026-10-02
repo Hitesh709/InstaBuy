@@ -1,0 +1,61 @@
+:root {
+  --ib-brand-950: #102b22;
+  --ib-brand-900: #173e30;
+  --ib-brand-800: #245440;
+  --ib-brand-700: #35684d;
+  --ib-brand-600: #4d7a5c;
+  --ib-accent-400: #d7ff5c;
+  --ib-accent-300: #e5ff91;
+  --ib-surface-0: #ffffff;
+  --ib-surface-50: #fafcfb;
+  --ib-surface-100: #f4f6f5;
+  --ib-surface-150: #eef3ef;
+  --ib-surface-200: #e5ebe8;
+  --ib-border: #dfe6e2;
+  --ib-text-950: #15211d;
+  --ib-text-700: #52615a;
+  --ib-text-500: #74817b;
+  --ib-text-400: #8d9993;
+  --ib-success: #2f7d4a;
+  --ib-warning: #b7791f;
+  --ib-danger: #b13b3b;
+  --ib-info: #356aa5;
+  --ib-radius-sm: 8px;
+  --ib-radius-md: 12px;
+  --ib-radius-lg: 16px;
+  --ib-radius-xl: 20px;
+  --ib-radius-2xl: 26px;
+  --ib-shadow-sm: 0 2px 8px rgba(16, 43, 34, .06);
+  --ib-shadow-md: 0 10px 30px rgba(16, 43, 34, .09);
+  --ib-shadow-lg: 0 24px 60px rgba(16, 43, 34, .14);
+  --ib-space-1: 4px;
+  --ib-space-2: 8px;
+  --ib-space-3: 12px;
+  --ib-space-4: 16px;
+  --ib-space-5: 20px;
+  --ib-space-6: 24px;
+  --ib-space-8: 32px;
+  --ib-space-10: 40px;
+  --ib-space-12: 48px;
+  --ib-content-max: 1600px;
+  --ib-sidebar: 245px;
+  --ib-rail: 285px;
+}
+
+.ib-focus:focus-visible,
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(77, 122, 92, .28);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+  }
+}

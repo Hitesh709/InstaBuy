@@ -7,6 +7,7 @@ import { addCartItem, loadCart } from "../../lib/client-store";
 import type { CartItem } from "../../lib/cart-ordering";
 import { instamartCatalog } from "../../lib/instamart-catalog";
 import "./shop.css";
+import "./shops.css";
 
 const money = (minor: number): Money => ({ currency: "INR", minor });
 
@@ -33,14 +34,7 @@ const products: ShoppingProduct[] = instamartCatalog.flatMap((category, category
     const discountPercent = 8 + ((categoryIndex * 3 + productIndex) % 18);
     const memberPriceMinor = Math.max(500, Math.round(originalPriceMinor * (100 - discountPercent) / 100));
     const id = `CAT-${category.id}-${String(productIndex + 1).padStart(3, "0")}`;
-    return {
-      id, name, brand: shops[storeIndex].name, category: category.name, categoryId: category.id,
-      storeId: shops[storeIndex].id, storeName: shops[storeIndex].name, city: "Rajkot",
-      unit: units[(categoryIndex + productIndex) % units.length], image: categoryIcons[category.id] ?? "🛍️",
-      originalPriceMinor, memberPriceMinor, availableQuantity: 8 + ((categoryIndex * 17 + productIndex * 7) % 72),
-      etaMinutes: 15 + ((categoryIndex * 5 + productIndex * 3) % 22), tags: [category.name, ...category.subcategories.slice(0, 2), name],
-      ...(productIndex % 13 === 0 ? { flashDeal: { label: "Flash deal", endsAt: "2026-10-02T23:59:00+05:30" } } : {})
-    };
+    return { id, name, brand: shops[storeIndex].name, category: category.name, categoryId: category.id, storeId: shops[storeIndex].id, storeName: shops[storeIndex].name, city: "Rajkot", unit: units[(categoryIndex + productIndex) % units.length], image: categoryIcons[category.id] ?? "🛍️", originalPriceMinor, memberPriceMinor, availableQuantity: 8 + ((categoryIndex * 17 + productIndex * 7) % 72), etaMinutes: 15 + ((categoryIndex * 5 + productIndex * 3) % 22), tags: [category.name, ...category.subcategories.slice(0, 2), name], ...(productIndex % 13 === 0 ? { flashDeal: { label: "Flash deal", endsAt: "2026-10-02T23:59:00+05:30" } } : {}) };
   })
 );
 
@@ -55,7 +49,6 @@ export default function ShopPage() {
   const [selected, setSelected] = useState<ShoppingProduct | null>(null);
   const [cartCount, setCartCount] = useState(0);
   const [addedId, setAddedId] = useState<string | null>(null);
-
   useEffect(() => setCartCount(loadCart().reduce((n, item) => n + item.quantity, 0)), []);
 
   const shopProducts = useMemo(() => selectedShop ? products.filter((product) => product.storeId === selectedShop) : products, [selectedShop]);
@@ -68,41 +61,23 @@ export default function ShopPage() {
   const selectedShopInfo = shops.find((shop) => shop.id === selectedShop);
   const visible = useMemo(() => shopProducts.filter((product) => matchesShoppingFilters(product, { query, category, flashOnly })), [shopProducts, query, category, flashOnly]);
 
-  function chooseShop(shopId: string) {
-    setSelectedShop(shopId);
-    setCategory("");
-    setFlashOnly(false);
-    setQuery("");
-  }
-
+  function chooseShop(shopId: string) { setSelectedShop(shopId); setCategory(""); setFlashOnly(false); setQuery(""); }
   function addToCart(product: ShoppingProduct) {
     const item: CartItem = { id: `CI-${product.id}`, productId: product.id, name: product.name, storeId: product.storeId, storeName: product.storeName, unitPriceMinor: product.memberPriceMinor, originalPriceMinor: product.originalPriceMinor, quantity: 1, maxQuantity: product.availableQuantity, emoji: product.image };
-    const next = addCartItem(item);
-    setCartCount(next.reduce((n, i) => n + i.quantity, 0));
-    setAddedId(product.id); setSelected(null);
-    window.setTimeout(() => setAddedId(null), 1200);
+    const next = addCartItem(item); setCartCount(next.reduce((n, i) => n + i.quantity, 0)); setAddedId(product.id); setSelected(null); window.setTimeout(() => setAddedId(null), 1200);
   }
 
   return <main className="shopShell">
-    <header className="shopHeader">
-      <a href="/" className="brand">Insta<span>Buy</span></a>
-      <div className="location"><small>DELIVER TO</small><strong>Rajkot, Gujarat⌄</strong></div>
-      <div className="shopSearch"><span>⌕</span><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={selectedShopInfo ? `Search in ${selectedShopInfo.name}` : "Search products, brands or categories"} /></div>
-      <a className="account" href="/account">Hitesh <span>IB</span></a>
-      <a className="account" href="/cart" aria-label="Cart">🛒 {cartCount}</a>
-    </header>
+    <header className="shopHeader"><a href="/" className="brand">Insta<span>Buy</span></a><div className="location"><small>DELIVER TO</small><strong>Rajkot, Gujarat⌄</strong></div><div className="shopSearch"><span>⌕</span><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={selectedShopInfo ? `Search in ${selectedShopInfo.name}` : "Search products, brands or categories"} /></div><a className="account" href="/account">Hitesh <span>IB</span></a><a className="account" href="/cart" aria-label="Cart">🛒 {cartCount}</a></header>
     <div className="shopLayout">
       <aside className="shopSide">
         <div className="memberCard"><small>MEMBER PRICING</small><strong>You're eligible</strong><p>Exclusive prices are automatically applied.</p><b>₹1,240 saved</b></div>
-        <div className="menuSection"><div className="menuTitle"><h4>SHOPS</h4><span>{shops.length}</span></div><nav className="shopMenu">{shops.map((shop) => <button key={shop.id} className={selectedShop === shop.id ? "active" : ""} onClick={() => chooseShop(shop.id)}><span className="shopMenuIcon">{shop.name.slice(0, 1)}</span><span className="shopMenuText"><b>{shop.name}</b><small>{shop.type}</small></span></button>)}</nav><button className={!selectedShop ? "allShop active" : "allShop"} onClick={() => chooseShop("")}>All partner shops <span>{products.length}</span></button></div>
+        <div className="menuSection"><div className="menuTitle"><h4>SHOPS / BUSINESS</h4><span>{shops.length}</span></div><nav className="shopMenu">{shops.map((shop) => <button key={shop.id} className={selectedShop === shop.id ? "active" : ""} onClick={() => chooseShop(shop.id)}><span className="shopMenuIcon">{shop.name.slice(0, 1)}</span><span className="shopMenuText"><b>{shop.name}</b><small>{shop.type} · {shop.owner}</small></span></button>)}</nav><button className={!selectedShop ? "allShop active" : "allShop"} onClick={() => chooseShop("")}>All partner shops <span>{products.length}</span></button></div>
         <div className="categoryMenu"><div className="menuTitle"><h4>{selectedShopInfo ? `${selectedShopInfo.name.toUpperCase()} CATEGORIES` : "CATEGORIES"}</h4><span>{shopCategories.length - 1}</span></div><nav>{shopCategories.map((item) => <button key={item.id} className={category === item.id ? "active" : ""} onClick={() => setCategory(item.id)}>{item.label}<span>{item.count}</span></button>)}</nav></div>
-        <button className={flashOnly ? "flash active" : "flash"} onClick={() => setFlashOnly(!flashOnly)}>⚡ Flash deals</button>
-        <a href="/deals" className="sideDeals">View all deals →</a>
+        <button className={flashOnly ? "flash active" : "flash"} onClick={() => setFlashOnly(!flashOnly)}>⚡ Flash deals</button><a href="/deals" className="sideDeals">View all deals →</a>
       </aside>
       <section className="shopMain">
-        <div className="shopTop">
-          <div><p className="eyebrow">{selectedShopInfo ? `PARTNER SHOP · ${selectedShopInfo.owner.toUpperCase()}` : "MEMBER MARKETPLACE · FULL CATALOG"}</p><h1>{selectedShopInfo ? <>{selectedShopInfo.name}. <span>Shop by category.</span></> : <>Shop local. <span>Save more.</span></>}</h1><p>{visible.length} items {selectedShopInfo ? `available from ${selectedShopInfo.name}` : "across verified partner stores"}{activeCategory ? ` · ${activeCategory.name}` : ""}.</p></div><div className="deliveryPill">● <b>Fast delivery</b><small>15–35 min</small></div>
-        </div>
+        <div className="shopTop"><div><p className="eyebrow">{selectedShopInfo ? `PARTNER SHOP · ${selectedShopInfo.owner.toUpperCase()}` : "MEMBER MARKETPLACE · FULL CATALOG"}</p><h1>{selectedShopInfo ? <>{selectedShopInfo.name}. <span>Shop by category.</span></> : <>Shop local. <span>Save more.</span></>}</h1><p>{visible.length} items {selectedShopInfo ? `available from ${selectedShopInfo.name}` : "across verified partner stores"}{activeCategory ? ` · ${activeCategory.name}` : ""}.</p></div><div className="deliveryPill">● <b>Fast delivery</b><small>15–35 min</small></div></div>
         {selectedShopInfo && <div className="selectedShopBanner"><div className="selectedShopAvatar">{selectedShopInfo.name.slice(0, 1)}</div><div><strong>{selectedShopInfo.name}</strong><span>{selectedShopInfo.type} · Partner shop · Owner: {selectedShopInfo.owner}</span></div><button onClick={() => chooseShop("")}>View all shops</button></div>}
         <div className="chipRow">{shopCategories.map((item) => <button key={item.id} className={category === item.id ? "selected" : ""} onClick={() => setCategory(item.id)}>{item.label} · {item.count}</button>)}<button className={flashOnly ? "selected" : ""} onClick={() => setFlashOnly(!flashOnly)}>⚡ Flash deals</button></div>
         {activeCategory && <div className="subCategoryRow">{activeCategory.subcategories.map((sub) => <span key={sub}>{sub}</span>)}</div>}

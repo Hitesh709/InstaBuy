@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { formatInr, type Money } from "../../lib/product-catalog";
 import { memberSavingsPercent, matchesShoppingFilters, savingsMinor, type ShoppingProduct } from "../../lib/customer-shopping";
+import { addCartItem, loadCart } from "../../lib/client-store";
+import type { CartItem } from "../../lib/cart-ordering";
 import "./shop.css";
 
 const products: ShoppingProduct[] = [
@@ -23,13 +25,27 @@ export default function ShopPage() {
   const [flashOnly, setFlashOnly] = useState(false);
   const [wishlist, setWishlist] = useState<string[]>(["P004"]);
   const [selected, setSelected] = useState<ShoppingProduct | null>(null);
+  const [cartCount, setCartCount] = useState(0);
+  const [addedId, setAddedId] = useState<string | null>(null);
+
+  useEffect(() => setCartCount(loadCart().reduce((n, item) => n + item.quantity, 0)), []);
+
   const visible = useMemo(() => products.filter((product) => matchesShoppingFilters(product, { query, category, flashOnly })), [query, category, flashOnly]);
 
+  function addToCart(product: ShoppingProduct) {
+    const item: CartItem = { id: `CI-${product.id}`, productId: product.id, name: product.name, storeId: product.storeId, storeName: product.storeName, unitPriceMinor: product.memberPriceMinor, originalPriceMinor: product.originalPriceMinor, quantity: 1, maxQuantity: product.availableQuantity, emoji: product.image };
+    const next = addCartItem(item);
+    setCartCount(next.reduce((n, i) => n + i.quantity, 0));
+    setAddedId(product.id);
+    setSelected(null);
+    window.setTimeout(() => setAddedId(null), 1200);
+  }
+
   return <main className="shopShell">
-    <header className="shopHeader"><a href="/" className="brand">Insta<span>Buy</span></a><div className="location"><small>DELIVER TO</small><strong>Rajkot, Gujarat⌄</strong></div><div className="shopSearch"><span>⌕</span><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search products, brands or categories" /></div><a className="account" href="/account">Hitesh <span>IB</span></a></header>
+    <header className="shopHeader"><a href="/" className="brand">Insta<span>Buy</span></a><div className="location"><small>DELIVER TO</small><strong>Rajkot, Gujarat⌄</strong></div><div className="shopSearch"><span>⌕</span><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search products, brands or categories" /></div><a className="account" href="/account">Hitesh <span>IB</span></a><a className="account" href="/cart" aria-label="Cart">🛒 {cartCount}</a></header>
     <div className="shopLayout"><aside className="shopSide"><div className="memberCard"><small>MEMBER PRICING</small><strong>You're eligible</strong><p>Exclusive prices are automatically applied.</p><b>₹1,240 saved</b></div><h4>Browse</h4><nav>{categories.map((item) => <button key={item.id} className={category === item.id ? "active" : ""} onClick={() => setCategory(item.id)}>{item.label}</button>)}</nav><button className={flashOnly ? "flash active" : "flash"} onClick={() => setFlashOnly(!flashOnly)}>⚡ Flash deals</button><a href="/deals" className="sideDeals">View all deals →</a></aside>
       <section className="shopMain"><div className="shopTop"><div><p className="eyebrow">MEMBER MARKETPLACE</p><h1>Shop local. <span>Save more.</span></h1><p>{visible.length} products from verified partner stores near you.</p></div><div className="deliveryPill">● <b>Fast delivery</b><small>15–35 min</small></div></div><div className="chipRow">{categories.map((item) => <button key={item.id} className={category === item.id ? "selected" : ""} onClick={() => setCategory(item.id)}>{item.label}</button>)}<button className={flashOnly ? "selected" : ""} onClick={() => setFlashOnly(!flashOnly)}>⚡ Flash deals</button></div>
-        <div className="productGrid">{visible.map((product) => { const save = savingsMinor(product); const wish = wishlist.includes(product.id); return <article className="productCard" key={product.id}><div className="productImage"><span>{product.image}</span><button aria-label="wishlist" onClick={() => setWishlist((list) => wish ? list.filter((id) => id !== product.id) : [...list, product.id])}>{wish ? "♥" : "♡"}</button>{product.flashDeal && <label>⚡ FLASH</label>}</div><div className="productBody"><div className="storeLine"><span>{product.storeName}</span><b>• {product.etaMinutes} min</b></div><h2>{product.name}</h2><p>{product.brand} · {product.unit}</p><div className="prices"><strong>{formatInr(money(product.memberPriceMinor))}</strong><del>{formatInr(money(product.originalPriceMinor))}</del><em>Save {memberSavingsPercent(product)}%</em></div><div className="cardFoot"><small>{product.availableQuantity} available</small><button onClick={() => setSelected(product)}>View deal</button></div></div></article>})}</div></section></div>
-    {selected && <div className="modalBackdrop" onClick={() => setSelected(null)}><div className="productModal" onClick={(e) => e.stopPropagation()}><button className="close" onClick={() => setSelected(null)}>×</button><div className="modalIcon">{selected.image}</div><p className="eyebrow">{selected.storeName} · {selected.etaMinutes} min</p><h2>{selected.name}</h2><p>{selected.brand} · {selected.unit}</p><div className="modalPrice"><strong>{formatInr(money(selected.memberPriceMinor))}</strong><del>{formatInr(money(selected.originalPriceMinor))}</del><b>Save {formatInr(money(savingsMinor(selected)))}</b></div><div className="modalInfo"><span>✓ Member eligible price</span><span>✓ {selected.availableQuantity} units in stock</span><span>✓ Delivered in {selected.etaMinutes} minutes</span></div><button className="primary">Add to cart</button></div></div>}
+        <div className="productGrid">{visible.map((product) => { const save = savingsMinor(product); const wish = wishlist.includes(product.id); return <article className="productCard" key={product.id}><div className="productImage"><span>{product.image}</span><button aria-label="wishlist" onClick={() => setWishlist((list) => wish ? list.filter((id) => id !== product.id) : [...list, product.id])}>{wish ? "♥" : "♡"}</button>{product.flashDeal && <label>⚡ FLASH</label>}</div><div className="productBody"><div className="storeLine"><span>{product.storeName}</span><b>• {product.etaMinutes} min</b></div><h2>{product.name}</h2><p>{product.brand} · {product.unit}</p><div className="prices"><strong>{formatInr(money(product.memberPriceMinor))}</strong><del>{formatInr(money(product.originalPriceMinor))}</del><em>Save {memberSavingsPercent(product)}%</em></div><div className="cardFoot"><small>{product.availableQuantity} available · Save {formatInr(money(save))}</small><button onClick={() => addToCart(product)}>{addedId === product.id ? "✓ Added" : "Add to cart"}</button><button onClick={() => setSelected(product)}>View</button></div></div></article>})}</div></section></div>
+    {selected && <div className="modalBackdrop" onClick={() => setSelected(null)}><div className="productModal" onClick={(e) => e.stopPropagation()}><button className="close" onClick={() => setSelected(null)}>×</button><div className="modalIcon">{selected.image}</div><p className="eyebrow">{selected.storeName} · {selected.etaMinutes} min</p><h2>{selected.name}</h2><p>{selected.brand} · {selected.unit}</p><div className="modalPrice"><strong>{formatInr(money(selected.memberPriceMinor))}</strong><del>{formatInr(money(selected.originalPriceMinor))}</del><b>Save {formatInr(money(savingsMinor(selected)))}</b></div><div className="modalInfo"><span>✓ Member eligible price</span><span>✓ {selected.availableQuantity} units in stock</span><span>✓ Delivered in {selected.etaMinutes} minutes</span></div><button className="primary" onClick={() => addToCart(selected)}>Add to cart →</button></div></div>}
   </main>;
 }
